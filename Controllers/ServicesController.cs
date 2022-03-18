@@ -132,21 +132,34 @@ public class ServicesController : ControllerBase
         if (list.Count == 0) NotFound($"name {name} was not found in Services");
         if (list.Count > 1) BadRequest($"name {name} was not found multiple times in Services");
         var restartTimeout = _configuration.GetValue<int>("RestartTimeoutSeconds");
+        var tasks = "";
         using (ServiceController sc = new ServiceController(list[0].ServiceName))
         {
-            if ((sc.Status.Equals(ServiceControllerStatus.Running)) || (sc.Status.Equals(ServiceControllerStatus.Paused)) || (sc.Status.Equals(ServiceControllerStatus.PausePending))) sc.Stop();
-            sc.Refresh();
+            if ((sc.Status.Equals(ServiceControllerStatus.Running)) || (sc.Status.Equals(ServiceControllerStatus.Paused)) || (sc.Status.Equals(ServiceControllerStatus.PausePending)))
+            {
+                tasks += "Stopping. ";
+                sc.Stop();
+                System.Threading.Thread.Sleep(2000);
+                sc.Refresh();
+                System.Threading.Thread.Sleep(1000);
+            } else
+            {
+                tasks += "Already Stopped. ";
+            }
             var waitCounter = 0;
+            if (sc.Status.Equals(ServiceControllerStatus.Stopped)) tasks += "Stopped. ";
             while (!sc.Status.Equals(ServiceControllerStatus.Stopped))
             {
                 System.Threading.Thread.Sleep(1000);
                 waitCounter++;
-                if (waitCounter > restartTimeout) return BadRequest($"Timeout ({restartTimeout} seconds) while waiting for service to stop");
+                if (waitCounter > restartTimeout) return BadRequest($"Timeout ({restartTimeout} seconds) while waiting for service to stop Actions: " + tasks);
                 sc.Refresh();
+                if (sc.Status.Equals(ServiceControllerStatus.Stopped)) tasks += "Stopped. ";
             }
+            tasks += "Starting. ";
             sc.Start();
         }
-        return Ok("Restarted Successfully");
+        return Ok("Restarted Successfully: Actions: " + tasks);
     }
 }
 public class ServiceItem
