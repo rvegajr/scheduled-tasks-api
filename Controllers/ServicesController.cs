@@ -119,6 +119,35 @@ public class ServicesController : ControllerBase
         return Ok("Stopped Successfully");
     }
 
+    /// <summary>
+    /// Stops a Scheduled Task
+    /// </summary>
+    /// <param name="name">Name of the task to stop</param>
+    /// <returns></returns>
+    [HttpPost]
+    [Route("{name}/restart")]
+    public ActionResult<string> RestartTask(string name)
+    {
+        var list = this.Get(name).ToList();
+        if (list.Count == 0) NotFound($"name {name} was not found in Services");
+        if (list.Count > 1) BadRequest($"name {name} was not found multiple times in Services");
+        var restartTimeout = _configuration.GetValue<int>("RestartTimeoutSeconds");
+        using (ServiceController sc = new ServiceController(list[0].ServiceName))
+        {
+            if ((sc.Status.Equals(ServiceControllerStatus.Running)) || (sc.Status.Equals(ServiceControllerStatus.Paused)) || (sc.Status.Equals(ServiceControllerStatus.PausePending))) sc.Stop();
+            sc.Refresh();
+            var waitCounter = 0;
+            while (!sc.Status.Equals(ServiceControllerStatus.Stopped))
+            {
+                System.Threading.Thread.Sleep(1000);
+                waitCounter++;
+                if (waitCounter > restartTimeout) return BadRequest($"Timeout ({restartTimeout} seconds) while waiting for service to stop");
+            }
+            sc.Refresh();
+            sc.Start();
+        }
+        return Ok("Restarted Successfully");
+    }
 }
 public class ServiceItem
 {

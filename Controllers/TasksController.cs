@@ -13,6 +13,7 @@ public class TasksController : ControllerBase
     {
         _logger = logger;
     }
+
     /// <summary>
     /// Returns a list of tasks
     /// </summary>
@@ -22,7 +23,7 @@ public class TasksController : ControllerBase
     [Route("{name?}")]
     public IEnumerable<Task> Get(string name)
     {
-        return Task.Create(TaskService.Instance.FindAllTasks(new Regex("^" + Regex.Escape(name).Replace("\\*", ".*").Replace("\\?", ".") + "$")));
+        return Task.Create(TaskService.Instance.FindAllTasks(new Regex("^" + Regex.Escape(name).Replace("\\*", ".*").Replace("\\?", ".") + "$"))).Filter(_configuration.GetValue<string>("AllowedTasks"));
     }
 
     /// <summary>
@@ -34,7 +35,7 @@ public class TasksController : ControllerBase
     [Route("{name}/status")]
     public ActionResult<string> GetStatus(string name)
     {
-        var list = Task.Create(TaskService.Instance.FindAllTasks(new Regex("^" + Regex.Escape(name).Replace("\\*", ".*").Replace("\\?", ".") + "$")));
+        var list = Get(name).ToHashSet();
         if (list.Count == 0) NotFound($"name {name} was not found in Schedule Tasks");
         if (list.Count > 1) BadRequest($"name {name} was not found multiple times in Schedule Tasks");
         return Ok(list.FirstOrDefault().State);
@@ -49,7 +50,7 @@ public class TasksController : ControllerBase
     [Route("{name}/start")]
     public ActionResult StartTask(string name)
     {
-        var list = Task.Create(TaskService.Instance.FindAllTasks(new Regex("^" + Regex.Escape(name).Replace("\\*", ".*").Replace("\\?", ".") + "$")));
+        var list = Get(name).ToHashSet();
         if (list.Count == 0) NotFound($"name {name} was not found in Schedule Tasks");
         if (list.Count > 1) BadRequest($"name {name} was not found multiple times in Schedule Tasks");
         using (TaskService ts = new TaskService())
@@ -72,7 +73,7 @@ public class TasksController : ControllerBase
     [Route("{name}/stop")]
     public ActionResult<string> StopTask(string name)
     {
-        var list = Task.Create(TaskService.Instance.FindAllTasks(new Regex("^" + Regex.Escape(name).Replace("\\*", ".*").Replace("\\?", ".") + "$")));
+        var list = Get(name).ToHashSet();
         if (list.Count == 0) NotFound($"name {name} was not found in Schedule Tasks");
         if (list.Count > 1) BadRequest($"name {name} was not found multiple times in Schedule Tasks");
         using (TaskService ts = new TaskService())
@@ -96,7 +97,7 @@ public class TasksController : ControllerBase
     public ActionResult<HashSet<EventItem>> TaskHistory(string name)
     {
         var retEvents = new HashSet<EventItem>();
-        var list = Task.Create(TaskService.Instance.FindAllTasks(new Regex("^" + Regex.Escape(name).Replace("\\*", ".*").Replace("\\?", ".") + "$")));
+        var list = Get(name).ToHashSet();
         if (list.Count == 0) NotFound($"name {name} was not found in Schedule Tasks");
         if (list.Count > 1) BadRequest($"name {name} was not found multiple times in Schedule Tasks");
 
@@ -134,29 +135,29 @@ public class TasksController : ControllerBase
 
     public class EventItem
     {
-        public string LevelDisplayName { get; set; }
-        public string OpcodeDisplayName { get; set; }
-        public string ActivityId { get; set; }
-        public string EventId { get; set; }
-        public string ProviderName { get; set; }
+        public string ?LevelDisplayName { get; set; }
+        public string? OpcodeDisplayName { get; set; }
+        public string? ActivityId { get; set; }
+        public string? EventId { get; set; }
+        public string? ProviderName { get; set; }
         public DateTime? TimeCreated { get; set; }
-        public string TaskDisplayName { get; set; }
+        public string? TaskDisplayName { get; set; }
         public int Task { get; set; }
-        public string EventInstanceDescription { get; set; }
-        public string EventLogRecordDescription { get; set; }
+        public string? EventInstanceDescription { get; set; }
+        public string? EventLogRecordDescription { get; set; }
     }
     public class Task
     {
-        public string Name { get; set; }
-        public string Path { get; set; }
-        public string Folder { get; set; }
-        public string State { get; set; }
+        public string? Name { get; set; }
+        public string? Path { get; set; }
+        public string? Folder { get; set; }
+        public string? State { get; set; }
         public bool Enabled { get; set; }
         public bool IsActive { get; set; }
         public DateTime LastRunTime { get; set; }
         public int LastTaskResult { get; set; }
         public DateTime NextRunTime { get; set; }
-        public string Xml { get; set; }
+        public string? Xml { get; set; }
         public static HashSet<Task> Create(Microsoft.Win32.TaskScheduler.Task[] tasksFrom)
         {
             var retTasks = new HashSet<Task>();
