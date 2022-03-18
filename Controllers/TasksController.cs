@@ -9,9 +9,10 @@ public class TasksController : ControllerBase
     protected readonly IConfiguration _configuration;
 
 
-    public TasksController(ILogger<TasksController> logger)
+    public TasksController(ILogger<TasksController> logger, IConfiguration configuration)
     {
         _logger = logger;
+        _configuration = configuration;
     }
 
     /// <summary>
