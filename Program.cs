@@ -1,4 +1,16 @@
-using Microsoft.AspNetCore.Authentication.Negotiate;
+global using Microsoft.AspNetCore.Authorization;
+global using Microsoft.AspNetCore.Mvc;
+global using Microsoft.Win32.TaskScheduler;
+global using Newtonsoft.Json;
+global using System.Diagnostics;
+global using System.Diagnostics.Eventing.Reader;
+global using System.ServiceProcess;
+global using System.Text.RegularExpressions;
+
+global using Microsoft.AspNetCore.Authentication.Negotiate;
+IConfiguration configuration = new ConfigurationBuilder()
+                            .AddJsonFile("appsettings.json")
+                            .Build();
 
 var builder = WebApplication.CreateBuilder(args);
 
