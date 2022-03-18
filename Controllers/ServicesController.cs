@@ -142,8 +142,8 @@ public class ServicesController : ControllerBase
                 System.Threading.Thread.Sleep(1000);
                 waitCounter++;
                 if (waitCounter > restartTimeout) return BadRequest($"Timeout ({restartTimeout} seconds) while waiting for service to stop");
+                sc.Refresh();
             }
-            sc.Refresh();
             sc.Start();
         }
         return Ok("Restarted Successfully");
