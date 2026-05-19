@@ -1,0 +1,26 @@
+## Code Style
+- Use file-scoped namespaces
+- Use primary constructors where appropriate
+- Prefer `var` for obvious types
+- Use expression-bodied members for single-line methods
+- Nullable reference types enabled — handle nulls explicitly
+
+## Patterns
+- All controller actions must be async (return `Task<ActionResult<T>>` or `Task<IActionResult>`)
+- Never use `Thread.Sleep` — always `await Task.Delay()`
+- Validation failures must `return` the error response (not just call it)
+- Service interfaces go in the same file as the interface definition
+- Use CancellationToken on all async methods
+- Use `TimeSpan` for timeout configuration, not raw integers
+
+## Testing
+- One test class per production class
+- Use NSubstitute for mocking interfaces
+- Test both happy path and error cases
+- Name tests: MethodName_Condition_ExpectedResult
+
+## Don'ts
+- Don't nest model classes inside controllers
+- Don't use `Newtonsoft.Json` — use `System.Text.Json`
+- Don't catch generic `Exception` unless re-throwing
+- Don't use static service locator patterns
