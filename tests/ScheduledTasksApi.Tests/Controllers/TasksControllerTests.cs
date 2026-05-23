@@ -39,7 +39,7 @@ public class TasksControllerTests
     [Fact]
     public void Get_NotFound_Returns404()
     {
-        _taskService.FindTask("missing", "*").Returns((TaskItem?)null);
+        _taskService.FindTaskDetail("missing", "*").Returns((TaskItemDetail?)null);
 
         var result = _controller.Get("missing");
 
@@ -47,15 +47,22 @@ public class TasksControllerTests
     }
 
     [Fact]
-    public void Get_Found_ReturnsTask()
+    public void Get_Found_ReturnsTaskDetail()
     {
-        var task = CreateTask("MyTask");
-        _taskService.FindTask("MyTask", "*").Returns(task);
+        var task = CreateTaskDetail("MyTask");
+        _taskService.FindTaskDetail("MyTask", "*").Returns(task);
 
         var result = _controller.Get("MyTask");
 
         var ok = Assert.IsType<OkObjectResult>(result.Result);
-        Assert.Equal(task, ok.Value);
+        var detail = Assert.IsType<TaskItemDetail>(ok.Value);
+        Assert.Equal("MyTask", detail.Name);
+        Assert.Equal("Test Author", detail.Author);
+        Assert.Equal("Test Description", detail.Description);
+        Assert.Single(detail.Actions);
+        Assert.Single(detail.Triggers);
+        Assert.NotNull(detail.Settings);
+        Assert.NotNull(detail.Principal);
     }
 
     [Fact]
@@ -112,5 +119,23 @@ public class TasksControllerTests
         LastRunTime = DateTime.MinValue,
         LastTaskResult = 0,
         NextRunTime = DateTime.MaxValue
+    };
+
+    private static TaskItemDetail CreateTaskDetail(string name, string state = "Ready") => new()
+    {
+        Name = name,
+        Path = $"\\{name}",
+        State = state,
+        Enabled = true,
+        IsActive = true,
+        LastRunTime = DateTime.MinValue,
+        LastTaskResult = 0,
+        NextRunTime = DateTime.MaxValue,
+        Author = "Test Author",
+        Description = "Test Description",
+        Actions = [new TaskActionItem { Type = "Execute", Path = "cmd.exe", Arguments = "/c echo hi" }],
+        Triggers = [new TaskTriggerItem { Type = "Daily", Enabled = true }],
+        Settings = new TaskSettingsItem { AllowHardTerminate = true, Priority = 7 },
+        Principal = new TaskPrincipalItem { UserId = "SYSTEM", RunLevel = "Highest" }
     };
 }

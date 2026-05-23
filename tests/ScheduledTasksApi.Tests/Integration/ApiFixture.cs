@@ -15,7 +15,7 @@ namespace ScheduledTasksApi.Tests.Integration;
 public class ApiFixture : WebApplicationFactory<Program>
 {
     public ITaskSchedulerService TaskSchedulerService { get; } = Substitute.For<ITaskSchedulerService>();
-    public IWindowsServiceManager WindowsServiceManager { get; } = Substitute.For<IWindowsServiceManager>();
+    public IServiceManager ServiceManager { get; } = Substitute.For<IServiceManager>();
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -24,11 +24,11 @@ public class ApiFixture : WebApplicationFactory<Program>
             // Remove real service registrations
             var taskDesc = services.FirstOrDefault(d => d.ServiceType == typeof(ITaskSchedulerService));
             if (taskDesc != null) services.Remove(taskDesc);
-            var svcDesc = services.FirstOrDefault(d => d.ServiceType == typeof(IWindowsServiceManager));
+            var svcDesc = services.FirstOrDefault(d => d.ServiceType == typeof(IServiceManager));
             if (svcDesc != null) services.Remove(svcDesc);
 
             services.AddSingleton(TaskSchedulerService);
-            services.AddSingleton(WindowsServiceManager);
+            services.AddSingleton(ServiceManager);
 
             // Remove all auth scheme registrations and replace with fake
             var authDescriptors = services.Where(d => d.ServiceType.FullName?.Contains("Authentication") == true).ToList();

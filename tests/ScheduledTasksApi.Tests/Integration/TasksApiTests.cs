@@ -36,7 +36,7 @@ public class TasksApiTests : IClassFixture<ApiFixture>
     [Fact]
     public async Task GetTask_NotFound_Returns404()
     {
-        _fixture.TaskSchedulerService.FindTask("nope", "*").Returns((TaskItem?)null);
+        _fixture.TaskSchedulerService.FindTaskDetail("nope", "*").Returns((TaskItemDetail?)null);
 
         var response = await _client.GetAsync("/api/tasks/nope");
 

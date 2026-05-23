@@ -23,12 +23,12 @@ public class TasksController(ITaskSchedulerService taskService, IConfiguration c
     }
 
     /// <summary>
-    /// Get a single task by exact name.
+    /// Get a single task with full detail (actions, triggers, settings, principal).
     /// </summary>
     [HttpGet("{name}")]
-    public ActionResult<TaskItem> Get(string name)
+    public ActionResult<TaskItemDetail> Get(string name)
     {
-        var task = taskService.FindTask(name, AllowedFilter);
+        var task = taskService.FindTaskDetail(name, AllowedFilter);
         if (task is null)
             return NotFound($"Task '{name}' not found or not allowed");
         return Ok(task);

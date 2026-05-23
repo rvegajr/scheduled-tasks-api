@@ -20,7 +20,7 @@ public class ServicesApiTests : IClassFixture<ApiFixture>
     [Fact]
     public async Task ListServices_ReturnsOk()
     {
-        _fixture.WindowsServiceManager.FindServices("*", "*")
+        _fixture.ServiceManager.FindServices("*", "*")
             .Returns(new List<ServiceItem>
             {
                 new() { ServiceName = "Svc1", DisplayName = "Service One", Status = "Running", ServiceType = "Win32OwnProcess", StartType = "Automatic" }
@@ -37,7 +37,7 @@ public class ServicesApiTests : IClassFixture<ApiFixture>
     [Fact]
     public async Task StartService_NotFound_Returns404()
     {
-        _fixture.WindowsServiceManager.FindService("missing", "*").Returns((ServiceItem?)null);
+        _fixture.ServiceManager.FindService("missing", "*").Returns((ServiceItem?)null);
 
         var response = await _client.PostAsync("/api/services/missing/start", null);
 
@@ -47,10 +47,10 @@ public class ServicesApiTests : IClassFixture<ApiFixture>
     [Fact]
     public async Task StopService_Timeout_Returns504()
     {
-        _fixture.WindowsServiceManager.FindService("SlowSvc", "*")
+        _fixture.ServiceManager.FindService("SlowSvc", "*")
             .Returns(new ServiceItem { ServiceName = "SlowSvc", DisplayName = "Slow", Status = "Running", ServiceType = "Win32OwnProcess", StartType = "Automatic" });
 
-        _fixture.WindowsServiceManager.StopServiceAsync("SlowSvc", Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
+        _fixture.ServiceManager.StopServiceAsync("SlowSvc", Arg.Any<TimeSpan>(), Arg.Any<CancellationToken>())
             .Throws(new System.TimeoutException("timed out"));
 
         var response = await _client.PostAsync("/api/services/SlowSvc/stop", null);
@@ -61,7 +61,7 @@ public class ServicesApiTests : IClassFixture<ApiFixture>
     [Fact]
     public async Task RestartService_Success_ReturnsOk()
     {
-        _fixture.WindowsServiceManager.FindService("MySvc", "*")
+        _fixture.ServiceManager.FindService("MySvc", "*")
             .Returns(new ServiceItem { ServiceName = "MySvc", DisplayName = "My Service", Status = "Running", ServiceType = "Win32OwnProcess", StartType = "Automatic" });
 
         var response = await _client.PostAsync("/api/services/MySvc/restart", null);

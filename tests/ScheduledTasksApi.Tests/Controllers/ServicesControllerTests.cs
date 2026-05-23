@@ -10,7 +10,7 @@ namespace ScheduledTasksApi.Tests.Controllers;
 
 public class ServicesControllerTests
 {
-    private readonly IWindowsServiceManager _serviceManager = Substitute.For<IWindowsServiceManager>();
+    private readonly IServiceManager _serviceManager = Substitute.For<IServiceManager>();
     private readonly IConfiguration _configuration;
     private readonly ServicesController _controller;
 
@@ -41,11 +41,28 @@ public class ServicesControllerTests
     [Fact]
     public void Get_NotFound_Returns404()
     {
-        _serviceManager.FindService("missing", "*").Returns((ServiceItem?)null);
+        _serviceManager.FindServiceDetail("missing", "*").Returns((ServiceItemDetail?)null);
 
         var result = _controller.Get("missing");
 
         Assert.IsType<NotFoundObjectResult>(result.Result);
+    }
+
+    [Fact]
+    public void Get_Found_ReturnsServiceDetail()
+    {
+        var detail = CreateServiceDetail("MySvc");
+        _serviceManager.FindServiceDetail("MySvc", "*").Returns(detail);
+
+        var result = _controller.Get("MySvc");
+
+        var ok = Assert.IsType<OkObjectResult>(result.Result);
+        var svc = Assert.IsType<ServiceItemDetail>(ok.Value);
+        Assert.Equal("MySvc", svc.ServiceName);
+        Assert.Equal("A test service", svc.Description);
+        Assert.Equal(@"C:\svc.exe", svc.ImagePath);
+        Assert.Equal("LocalSystem", svc.ServiceAccount);
+        Assert.Equal(1234, svc.ProcessId);
     }
 
     [Fact]
@@ -103,5 +120,19 @@ public class ServicesControllerTests
         Status = "Running",
         ServiceType = "Win32OwnProcess",
         StartType = "Automatic"
+    };
+
+    private static ServiceItemDetail CreateServiceDetail(string name) => new()
+    {
+        ServiceName = name,
+        DisplayName = $"{name} Display",
+        Status = "Running",
+        ServiceType = "Win32OwnProcess",
+        StartType = "Automatic",
+        Description = "A test service",
+        ImagePath = @"C:\svc.exe",
+        ServiceAccount = "LocalSystem",
+        ProcessId = 1234,
+        ErrorControl = "Normal"
     };
 }

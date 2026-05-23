@@ -1,10 +1,12 @@
+#if WINDOWS
+using System.Management;
 using System.ServiceProcess;
 using ScheduledTasksApi.Extensions;
 using ScheduledTasksApi.Models;
 
 namespace ScheduledTasksApi.Services;
 
-public class WindowsServiceManager : IWindowsServiceManager
+public class WindowsServiceManager : IServiceManager
 {
     public IReadOnlyList<ServiceItem> FindServices(string pattern, string allowedFilter)
     {
@@ -22,6 +24,55 @@ public class WindowsServiceManager : IWindowsServiceManager
     {
         var services = FindServices(name, allowedFilter);
         return services.Count == 1 ? services[0] : null;
+    }
+
+    public ServiceItemDetail? FindServiceDetail(string name, string allowedFilter)
+    {
+        var service = FindService(name, allowedFilter);
+        if (service is null) return null;
+
+        try
+        {
+            using var mo = new ManagementObject($"Win32_Service.Name='{service.ServiceName}'");
+            mo.Get();
+
+            return new ServiceItemDetail
+            {
+                ServiceName = service.ServiceName,
+                DisplayName = service.DisplayName,
+                Status = service.Status,
+                ServiceType = service.ServiceType,
+                StartType = service.StartType,
+                MachineName = service.MachineName,
+                CanStop = service.CanStop,
+                CanPauseAndContinue = service.CanPauseAndContinue,
+                CanShutdown = service.CanShutdown,
+                DependentServices = service.DependentServices,
+                ServicesDependedOn = service.ServicesDependedOn,
+                Description = mo["Description"]?.ToString(),
+                ImagePath = mo["PathName"]?.ToString(),
+                ServiceAccount = mo["StartName"]?.ToString(),
+                ProcessId = mo["ProcessId"] is uint pid ? (int)pid : null,
+                ErrorControl = mo["ErrorControl"]?.ToString()
+            };
+        }
+        catch (ManagementException)
+        {
+            return new ServiceItemDetail
+            {
+                ServiceName = service.ServiceName,
+                DisplayName = service.DisplayName,
+                Status = service.Status,
+                ServiceType = service.ServiceType,
+                StartType = service.StartType,
+                MachineName = service.MachineName,
+                CanStop = service.CanStop,
+                CanPauseAndContinue = service.CanPauseAndContinue,
+                CanShutdown = service.CanShutdown,
+                DependentServices = service.DependentServices,
+                ServicesDependedOn = service.ServicesDependedOn
+            };
+        }
     }
 
     public async Task StartServiceAsync(string serviceName, CancellationToken ct = default)
@@ -94,3 +145,4 @@ public class WindowsServiceManager : IWindowsServiceManager
         ServicesDependedOn = sc.ServicesDependedOn.Select(d => d.ServiceName).ToArray()
     };
 }
+#endif

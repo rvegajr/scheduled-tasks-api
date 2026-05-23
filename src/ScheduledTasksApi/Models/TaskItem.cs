@@ -11,4 +11,5 @@ public record TaskItem
     public DateTime LastRunTime { get; init; }
     public int LastTaskResult { get; init; }
     public DateTime NextRunTime { get; init; }
+    public string? Source { get; init; }
 }

@@ -8,7 +8,7 @@ namespace ScheduledTasksApi.Controllers;
 [Authorize]
 [ApiController]
 [Route("api/services")]
-public class ServicesController(IWindowsServiceManager serviceManager, IConfiguration configuration) : ControllerBase
+public class ServicesController(IServiceManager serviceManager, IConfiguration configuration) : ControllerBase
 {
     private string AllowedFilter => configuration.GetValue<string>("AllowedServices") ?? "";
     private TimeSpan Timeout => TimeSpan.FromSeconds(configuration.GetValue<int>("RestartTimeoutSeconds", 120));
@@ -24,12 +24,12 @@ public class ServicesController(IWindowsServiceManager serviceManager, IConfigur
     }
 
     /// <summary>
-    /// Get a single service by name.
+    /// Get a single service with full detail (description, image path, account, PID).
     /// </summary>
     [HttpGet("{name}")]
-    public ActionResult<ServiceItem> Get(string name)
+    public ActionResult<ServiceItemDetail> Get(string name)
     {
-        var service = serviceManager.FindService(name, AllowedFilter);
+        var service = serviceManager.FindServiceDetail(name, AllowedFilter);
         if (service is null)
             return NotFound($"Service '{name}' not found or not allowed");
         return Ok(service);
