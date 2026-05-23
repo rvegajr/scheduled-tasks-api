@@ -9,6 +9,7 @@ RUN dotnet restore src/ScheduledTasksApi/ScheduledTasksApi.csproj
 COPY . .
 RUN dotnet publish src/ScheduledTasksApi/ScheduledTasksApi.csproj \
     -c Release \
+    --framework net10.0 \
     -o /app \
     --no-restore
 
@@ -21,7 +22,6 @@ COPY --from=build /app .
 ENV ASPNETCORE_URLS=http://+:8080
 ENV AllowedTasks=*
 ENV AllowedServices=*
-ENV ApiKey=
 
 EXPOSE 8080
 

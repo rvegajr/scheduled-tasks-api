@@ -12,15 +12,19 @@ jobs:
         include:
           - os: ubuntu-latest
             rid: linux-x64
+            framework: net10.0
             name: linux-x64
           - os: ubuntu-latest
             rid: linux-arm64
+            framework: net10.0
             name: linux-arm64
           - os: macos-latest
             rid: osx-arm64
+            framework: net10.0
             name: macos-arm64
           - os: windows-latest
             rid: win-x64
+            framework: net10.0-windows
             name: windows-x64
 
     runs-on: ${{ matrix.os }}
@@ -38,6 +42,7 @@ jobs:
         run: >
           dotnet publish src/ScheduledTasksApi/ScheduledTasksApi.csproj
           -c Release
+          --framework ${{ matrix.framework }}
           -r ${{ matrix.rid }}
           --self-contained
           -p:PublishSingleFile=true
