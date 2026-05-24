@@ -114,6 +114,90 @@ The `GET /api/services/{name}` endpoint returns:
 }
 ```
 
+## Usage Examples
+
+All examples use `http://localhost:5000` (Linux/macOS). For Windows, replace with `https://localhost:5001` and swap the `-H "X-Api-Key: ..."` header for `--negotiate -u :`.
+
+### Authentication
+
+```bash
+# Linux/macOS — API key header (set ApiKey in appsettings.json first)
+curl http://localhost:5000/api/tasks -H "X-Api-Key: YOUR_KEY"
+
+# Windows — Negotiate (Kerberos/NTLM, uses current user)
+curl --negotiate -u : https://localhost:5001/api/tasks
+
+# Anonymous (only when ApiKey is empty in config)
+curl http://localhost:5000/api/tasks
+```
+
+### Tasks
+
+```bash
+# List all tasks
+curl http://localhost:5000/api/tasks -H "X-Api-Key: YOUR_KEY"
+
+# List tasks matching a pattern
+curl "http://localhost:5000/api/tasks?pattern=*Backup*" -H "X-Api-Key: YOUR_KEY"
+
+# Get full task detail (actions, triggers, settings, principal)
+curl http://localhost:5000/api/tasks/BackupTask -H "X-Api-Key: YOUR_KEY"
+
+# Get task status
+curl http://localhost:5000/api/tasks/BackupTask/status -H "X-Api-Key: YOUR_KEY"
+
+# Get task history / event log
+curl http://localhost:5000/api/tasks/BackupTask/history -H "X-Api-Key: YOUR_KEY"
+
+# Run a task
+curl -X POST http://localhost:5000/api/tasks/BackupTask/run -H "X-Api-Key: YOUR_KEY"
+
+# Stop a running task
+curl -X POST http://localhost:5000/api/tasks/BackupTask/stop -H "X-Api-Key: YOUR_KEY"
+```
+
+### Services
+
+```bash
+# List all services
+curl http://localhost:5000/api/services -H "X-Api-Key: YOUR_KEY"
+
+# List services matching a pattern
+curl "http://localhost:5000/api/services?pattern=*nginx*" -H "X-Api-Key: YOUR_KEY"
+
+# Get full service detail (description, executable, account, PID)
+curl http://localhost:5000/api/services/nginx -H "X-Api-Key: YOUR_KEY"
+
+# Get service status
+curl http://localhost:5000/api/services/nginx/status -H "X-Api-Key: YOUR_KEY"
+
+# Start a service
+curl -X POST http://localhost:5000/api/services/nginx/start -H "X-Api-Key: YOUR_KEY"
+
+# Stop a service
+curl -X POST http://localhost:5000/api/services/nginx/stop -H "X-Api-Key: YOUR_KEY"
+
+# Restart a service
+curl -X POST http://localhost:5000/api/services/nginx/restart -H "X-Api-Key: YOUR_KEY"
+```
+
+### Windows Examples
+
+```powershell
+# PowerShell with Negotiate auth
+Invoke-RestMethod -Uri https://localhost:5001/api/tasks -UseDefaultCredentials
+
+# List services matching a pattern
+Invoke-RestMethod -Uri "https://localhost:5001/api/services?pattern=*SQL*" -UseDefaultCredentials
+
+# Restart a service
+Invoke-RestMethod -Uri https://localhost:5001/api/services/MSSQLSERVER/restart -Method POST -UseDefaultCredentials
+
+# curl on Windows with Negotiate
+curl --negotiate -u : https://localhost:5001/api/tasks
+curl --negotiate -u : -X POST https://localhost:5001/api/tasks/BackupTask/run
+```
+
 ## Platform Support
 
 | Feature | Windows | Linux | macOS |
